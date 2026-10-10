@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Create account</title>
+<style>
+/* ── Inter, embedded (latin subset) so the page renders identically offline ── */
+@font-face{font-family:"Inter";font-style:normal;font-weight:400;font-display:block;src:url(/assets/inter-400.woff2) format("woff2")}
+@font-face{font-family:"Inter";font-style:normal;font-weight:500;font-display:block;src:url(/assets/inter-500.woff2) format("woff2")}
+@font-face{font-family:"Inter";font-style:normal;font-weight:600;font-display:block;src:url(/assets/inter-600.woff2) format("woff2")}
+@font-face{font-family:"Inter";font-style:normal;font-weight:700;font-display:block;src:url(/assets/inter-700.woff2) format("woff2")}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Scale system
+   Every measurement below is written in reference pixels (the 1447 × 1087
+   artboard) and multiplied by --u, "one reference pixel".  On desktop --u is
+   chosen so the artboard fits the viewport; the photo card absorbs any extra
+   width or height, so the screen is always filled edge to edge with no bands.
+   ───────────────────────────────────────────────────────────────────────── */
+:root{
+  --u: clamp(0.70px, min(100vw / 1447, 100vh / 1087), 2.4px);
+  --page: #FFFFFF;
+  --ink: #000000;
+  --ink-2: #535862;
+  --ink-3: #717680;
+  --line: #D5D7DA;
+  --btn: #161617;
+  --select: #0A0A0A;
+  --tile: 61;           /* hero pattern cell, ref px */
+}
+@supports (height: 100dvh){
+  :root{ --u: clamp(0.70px, min(100vw / 1447, 100dvh / 1087), 2.4px); }
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--page);
+  color:var(--ink);
+  font-family:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-feature-settings:"cv11" 0;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+}
+button{font:inherit;color:inherit}
+
+/* ── Shell ─────────────────────────────────────────────────────────────── */
+.shell{
+  min-height:100vh;
+  min-height:100dvh;
+  display:grid;
+  /* photo ≈55% / form ≈45%: the form column never drops below its reference width */
+  grid-template-columns:minmax(0,1fr) max(calc(508.7 * var(--u)), 45%);
+  padding:calc(11.5 * var(--u)) 0 calc(15.7 * var(--u)) calc(15.6 * var(--u));
+}
+
+/* ── Hero card ─────────────────────────────────────────────────────────── */
+.hero{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  border-radius:0 calc(24 * var(--u)) calc(24 * var(--u)) calc(24 * var(--u));
+  background:#2a2a2a;
+  min-height:calc(560 * var(--u));
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+}
+.hero__img{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  object-fit:cover;
+  object-position:60% 25%;   /* keeps her face in frame as the card changes shape */
+  z-index:-3;
+  user-select:none;-webkit-user-drag:none;
+}
+/* bottom glass: progressive blur + soft dark wash behind the testimonial */
+.hero__glass{
+  position:absolute;left:0;right:0;bottom:0;
+  height:calc(var(--glass-h, 360) * var(--u));
+  z-index:-2;
+  pointer-events:none;
+  background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,var(--glass-a,.21)) 55%, rgba(0,0,0,var(--glass-a2,.12)) 100%);
+  -webkit-backdrop-filter:blur(calc(var(--glass-b, 22) * var(--u)));
+          backdrop-filter:blur(calc(var(--glass-b, 22) * var(--u)));
+  -webkit-mask-image:linear-gradient(180deg, transparent 0%, #000 var(--glass-m, 35%));
+          mask-image:linear-gradient(180deg, transparent 0%, #000 var(--glass-m, 35%));
+}
+
+/* top-left tile pattern (cut-outs + frosted tiles) */
+.hero__pattern{
+  position:absolute;left:0;top:0;
+  width:calc(4 * var(--tile) * var(--u));
+  height:calc(4 * var(--tile) * var(--u));
+  pointer-events:none;
+}
+.hero__pattern svg{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:2}
+.frost{
+  position:absolute;
+  width:calc(var(--tile) * var(--u));
+  height:calc(var(--tile) * var(--u));
+  left:calc(var(--c) * var(--tile) * var(--u));
+  top:calc(var(--r) * var(--tile) * var(--u));
+  border-radius:calc(var(--tile) * 15 / 61 * var(--u));
+  background:rgba(255,255,255,.5);
+  -webkit-backdrop-filter:blur(calc(8 * var(--u)));
+          backdrop-filter:blur(calc(8 * var(--u)));
+  z-index:1;
+}
+
+/* testimonial */
+.quote{
+  position:relative;
+  margin:0;
+  padding:0 calc(40 * var(--u)) calc(var(--q-pb, 46) * var(--u)) calc(40 * var(--u));
+  color:#fff;
+}
+.quote blockquote{
+  margin:0;
+  max-width:calc(772 * var(--u));
+  font-weight:500;
+  font-size:calc(31.35 * var(--u));
+  line-height:calc(45.5 * var(--u));
+  letter-spacing:calc(0.16 * var(--u));
+}
+.quote__foot{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  gap:calc(24 * var(--u));
+  margin-top:calc(var(--q-gap, 27) * var(--u));
+}
+.quote figcaption{display:flex;flex-direction:column}
+.quote__name{
+  font-weight:600;
+  font-size:calc(20.5 * var(--u));
+  line-height:calc(28 * var(--u));
+}
+.quote__role{
+  font-weight:500;
+  font-size:calc(16.25 * var(--u));
+  line-height:calc(24 * var(--u));
+  margin-top:calc(var(--role-mt, 2) * var(--u));
+}
+.quote__nav{
+  display:flex;gap:calc(31 * var(--u));
+  margin-right:calc(1.5 * var(--u));
+  margin-bottom:calc(var(--nav-mb, -1) * var(--u));
+}
+.arrow{
+  width:calc(59 * var(--u));height:calc(59 * var(--u));
+  padding:0;border:0;background:none;border-radius:50%;
+  cursor:pointer;display:block;
+  transition:transform .2s ease, background-color .2s ease;
+}
+.arrow svg{display:block;width:100%;height:100%;overflow:visible}
+.arrow:hover{background:rgba(255,255,255,.08)}
+.arrow:active{transform:scale(.96)}
+.arrow:focus-visible{outline:2px solid #fff;outline-offset:3px}
+
+/* ── Right panel ───────────────────────────────────────────────────────── */
+.panel{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:calc(var(--p-top, 15) * var(--u)) calc(48 * var(--u)) 0;
+}
+.panel__inner{width:calc(398.5 * var(--u))}
+
+.brand{
+  display:flex;align-items:center;
+  height:calc(22 * var(--u));
+  gap:calc(9 * var(--u));
+  color:var(--ink);text-decoration:none;
+}
+.brand svg{width:calc(21 * var(--u));height:calc(21 * var(--u));flex:none;display:block;transform:translateY(calc(-1.25 * var(--u)))}
+.brand span{
+  font-weight:600;
+  font-size:calc(21.75 * var(--u));
+  line-height:calc(22 * var(--u));
+  letter-spacing:calc(-0.22 * var(--u));
+}
+
+.title{
+  margin:calc(var(--h1-mt, 50.5) * var(--u)) 0 0;
+  font-weight:700;
+  font-size:calc(26 * var(--u));
+  line-height:calc(32 * var(--u));
+  letter-spacing:calc(-0.65 * var(--u));
+}
+.lede{
+  margin:calc(var(--sub-mt, 10.5) * var(--u)) 0 0;
+  font-weight:400;
+  font-size:calc(17.15 * var(--u));
+  line-height:calc(24 * var(--u));
+  color:var(--ink-2);
+}
+
+.tools{
+  margin:calc(var(--grid-mt, 41) * var(--u)) 0 0;
+  padding:0;border:0;min-width:0;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  column-gap:calc(19 * var(--u));
+  row-gap:calc(18 * var(--u));
+}
+.tools legend{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.tool{
+  position:relative;
+  display:block;
+  height:calc(130.5 * var(--u));
+  padding:calc(15 * var(--u)) calc(16 * var(--u)) 0 calc(16 * var(--u));
+  border-radius:calc(11 * var(--u));
+  background:#fff;
+  box-shadow:inset 0 0 0 calc(1 * var(--u)) var(--line);
+  cursor:pointer;
+  transition:box-shadow .15s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.tool input{position:absolute;opacity:0;pointer-events:none}
+.tool:has(input:checked){box-shadow:inset 0 0 0 calc(2 * var(--u)) var(--select)}
+.tool:has(input:focus-visible){outline:2px solid var(--select);outline-offset:3px}
+.tool__mark{
+  position:absolute;
+  top:calc(11.5 * var(--u));right:calc(13 * var(--u));
+  width:calc(20 * var(--u));height:calc(20 * var(--u));
+  border-radius:50%;
+  box-shadow:inset 0 0 0 calc(1 * var(--u)) var(--line);
+  display:grid;place-items:center;
+  transition:background-color .15s ease, box-shadow .15s ease;
+}
+.tool__mark svg{width:100%;height:100%;opacity:0;transition:opacity .15s ease}
+.tool:has(input:checked) .tool__mark{background:#000;box-shadow:none}
+.tool:has(input:checked) .tool__mark svg{opacity:1}
+
+.app{
+  display:block;
+  width:calc(44 * var(--u));height:calc(44 * var(--u));
+  border-radius:calc(11 * var(--u));
+  padding:calc(2 * var(--u));
+  background:#E5E5E7;
+  box-shadow:0 calc(1 * var(--u)) calc(2 * var(--u)) rgba(10,13,18,.08);
+}
+.app__face{
+  width:100%;height:100%;
+  border-radius:calc(9 * var(--u));
+  display:grid;place-items:center;
+  font-weight:700;
+  font-size:calc(17 * var(--u));
+  letter-spacing:calc(-0.3 * var(--u));
+  color:#fff;
+  box-shadow:inset 0 0 0 calc(1 * var(--u)) rgba(255,255,255,.08);
+}
+.tool__name{
+  display:block;
+  margin-top:calc(var(--name-mt, 11.5) * var(--u));
+  font-weight:600;
+  font-size:calc(16.75 * var(--u));
+  line-height:calc(23 * var(--u));
+  letter-spacing:calc(-0.25 * var(--u));
+  color:var(--ink);
+}
+.tool__link{
+  display:inline-flex;align-items:center;
+  gap:calc(5 * var(--u));
+  font-weight:400;
+  font-size:calc(16.75 * var(--u));
+  line-height:calc(23 * var(--u));
+  color:var(--ink-2);
+  text-decoration:none;
+}
+.tool__link svg{width:calc(15 * var(--u));height:calc(15 * var(--u));flex:none;color:var(--ink-3);transform:translateY(calc(-1 * var(--u)))}
+.tool__link:hover{color:var(--ink)}
+
+.cta{
+  display:block;width:100%;
+  margin-top:calc(var(--btn-mt, 43) * var(--u));
+  height:calc(53 * var(--u));
+  border:0;border-radius:999px;
+  background:var(--btn);
+  color:#fff;
+  font-weight:600;
+  font-size:calc(19 * var(--u));
+  letter-spacing:calc(-0.12 * var(--u));
+  cursor:pointer;
+  transition:background-color .15s ease, transform .15s ease;
+}
+.cta:hover{background:#2a2a2d}
+.cta:active{transform:translateY(1px)}
+.cta:focus-visible{outline:2px solid var(--select);outline-offset:3px}
+
+.foot{
+  margin:calc(var(--foot-mt, 38.7) * var(--u)) 0 0;
+  text-align:center;
+  font-weight:400;
+  font-size:calc(16 * var(--u));
+  line-height:calc(24 * var(--u));
+  color:var(--ink-2);
+}
+.foot a{
+  color:var(--ink);font-weight:600;
+  text-decoration:underline;
+  text-decoration-thickness:calc(1.5 * var(--u));
+  text-underline-offset:calc(3 * var(--u));
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Responsive modes
+   B  Tablet (portrait tablets, small windows): photo on top, wide form below
+      with a 3-column tool grid. Fills exactly one screen.
+   C  Phone portrait: compact tool cards, everything fits one screen, no scroll.
+   D  Phone landscape / very short windows: side-by-side again, compact form.
+   In B, C and D the page is locked to the viewport height (100dvh) and every
+   size scales from both width and height, so nothing ever needs to scroll.
+   ───────────────────────────────────────────────────────────────────── */
+
+/* ── shared by B, C, D: fixed one-screen shell ── */
+@media (max-width: 900px), (orientation: portrait) and (max-width: 1180px), (orientation: landscape) and (max-height: 500px){
+  html,body{overflow:hidden}
+  .shell{height:100vh;height:100dvh;min-height:0;overflow:hidden}
+  .hero{min-height:0;container:hero / size}
+  .quote blockquote{
+    display:-webkit-box;-webkit-box-orient:vertical;
+    -webkit-line-clamp:var(--lines, 4);line-clamp:var(--lines, 4);
+    overflow:hidden;
+  }
+}
+
+/* ── B · Tablet ── */
+@media (max-width: 900px), (orientation: portrait) and (max-width: 1180px){
+  :root{ --u: clamp(0.72px, min(100vw / 780, 100vh / 1024), 1.3px); --tile: 50; }
+  @supports (height: 100dvh){ :root{ --u: clamp(0.72px, min(100vw / 780, 100dvh / 1024), 1.3px); } }
+  .shell{
+    grid-template-columns:minmax(0,1fr);
+    grid-template-rows:minmax(0,1fr) auto;
+    padding:calc(12 * var(--u)) calc(12 * var(--u)) 0;
+  }
+  .hero{border-radius:0 calc(20 * var(--u)) calc(20 * var(--u)) calc(20 * var(--u))}
+  .hero__img{object-position:62% 16%}
+  .hero__glass{--glass-h:300}
+  .quote{padding:0 calc(28 * var(--u)) calc(24 * var(--u))}
+  .quote blockquote{max-width:calc(640 * var(--u));font-size:calc(21 * var(--u));line-height:calc(30 * var(--u));letter-spacing:calc(-0.1 * var(--u))}
+  .quote__foot{margin-top:calc(18 * var(--u))}
+  .quote__name{font-size:calc(17 * var(--u));line-height:calc(24 * var(--u))}
+  .quote__role{font-size:calc(14 * var(--u));line-height:calc(20 * var(--u));margin-top:0}
+  .quote__nav{gap:calc(12 * var(--u));margin:0}
+  .arrow{width:calc(46 * var(--u));height:calc(46 * var(--u))}
+
+  .panel{
+    justify-content:center;
+    padding:calc(30 * var(--u)) calc(16 * var(--u)) calc(26 * var(--u));
+  }
+  .panel__inner{width:100%;max-width:calc(640 * var(--u))}
+  .title{margin-top:calc(26 * var(--u))}
+  .lede{margin-top:calc(6 * var(--u))}
+  .tools{
+    margin-top:calc(26 * var(--u));
+    grid-template-columns:repeat(3, minmax(0,1fr));
+    column-gap:calc(14 * var(--u));row-gap:calc(14 * var(--u));
+  }
+  .tool{height:calc(124 * var(--u))}
+  .tool__name{margin-top:calc(10 * var(--u))}
+  .cta{margin-top:calc(26 * var(--u))}
+  .foot{margin-top:calc(18 * var(--u))}
+}
+
+/* ── compact tool cards, used by C and D ── */
+@media (max-width: 600px), (orientation: landscape) and (max-height: 500px){
+  .tool{
+    display:grid;
+    grid-template-columns:auto minmax(0,1fr);
+    grid-template-areas:"app name" "app link";
+    align-content:center;
+    column-gap:calc(10 * var(--u));
+    height:max(46px, calc(var(--card-h, 60) * var(--u)));
+    padding:0 calc(11 * var(--u));
+    border-radius:calc(10 * var(--u));
+  }
+  .app{grid-area:app;align-self:center;width:calc(34 * var(--u));height:calc(34 * var(--u));border-radius:calc(9 * var(--u));padding:calc(1.5 * var(--u))}
+  .app__face{border-radius:calc(7.5 * var(--u));font-size:max(10px, calc(13 * var(--u)))}
+  .tool__name{
+    grid-area:name;margin:0;
+    padding-right:calc(22 * var(--u));
+    font-size:max(12px, calc(14.5 * var(--u)));
+    line-height:max(16px, calc(19 * var(--u)));
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .tool__link{
+    grid-area:link;min-width:0;
+    display:block;overflow:hidden;text-overflow:ellipsis;
+    font-size:max(11px, calc(13 * var(--u)));
+    line-height:max(15px, calc(18 * var(--u)));
+    white-space:nowrap;
+  }
+  .tool__link svg{display:inline-block;vertical-align:-0.1em;margin-left:calc(4 * var(--u));width:max(10px, calc(12 * var(--u)));height:max(10px, calc(12 * var(--u)));transform:none}
+  .tool__mark{top:calc(9 * var(--u));right:calc(9 * var(--u));width:calc(18 * var(--u));height:calc(18 * var(--u))}
+  .brand{height:max(18px, calc(20 * var(--u)));gap:calc(8 * var(--u))}
+  .brand svg{width:max(15px, calc(18 * var(--u)));height:max(15px, calc(18 * var(--u)));transform:none}
+  .brand span{font-size:max(15px, calc(18 * var(--u)));line-height:max(18px, calc(20 * var(--u)))}
+  .title{font-size:max(18px, calc(22 * var(--u)));line-height:max(23px, calc(28 * var(--u)));letter-spacing:calc(-0.5 * var(--u))}
+  .lede{margin-top:calc(4 * var(--u));font-size:max(12.5px, calc(14.5 * var(--u)));line-height:max(17px, calc(20 * var(--u)))}
+  .cta{height:max(38px, calc(46 * var(--u)));font-size:max(14px, calc(16 * var(--u)))}
+  .foot{font-size:max(12.5px, calc(14 * var(--u)));line-height:max(17px, calc(20 * var(--u)))}
+  .foot a{text-underline-offset:calc(2.5 * var(--u))}
+  .quote__name{font-size:max(13px, calc(15 * var(--u)));line-height:max(18px, calc(20 * var(--u)))}
+  .quote__role{font-size:max(11px, calc(12.5 * var(--u)));line-height:max(15px, calc(17 * var(--u)))}
+  .arrow{width:calc(38 * var(--u));height:calc(38 * var(--u))}
+  .quote__nav{gap:calc(8 * var(--u))}
+}
+
+/* ── C · Phone portrait ── */
+@media (max-width: 600px){
+  :root{ --u: clamp(0.6px, min(100vw / 400, 100vh / 830), 1.15px); --tile: 34; }
+  @supports (height: 100dvh){ :root{ --u: clamp(0.6px, min(100vw / 400, 100dvh / 830), 1.15px); } }
+  .shell{padding:calc(10 * var(--u)) calc(10 * var(--u)) 0}
+  .hero{border-radius:0 calc(18 * var(--u)) calc(18 * var(--u)) calc(18 * var(--u))}
+  .hero__img{object-position:44% 12%;transform:scale(1.18);transform-origin:50% 16%}
+  .hero__glass{--glass-h:250}
+  .quote{padding:0 calc(18 * var(--u)) calc(16 * var(--u))}
+  .quote blockquote{font-size:max(13px, calc(16.5 * var(--u)));line-height:max(18px, calc(23 * var(--u)));letter-spacing:0;--lines:3}
+  .quote__foot{margin-top:calc(12 * var(--u))}
+  .panel{padding:calc(18 * var(--u)) calc(8 * var(--u)) calc(14 * var(--u))}
+  .panel__inner{max-width:none}
+  .title{margin-top:calc(16 * var(--u))}
+  .tools{margin-top:calc(16 * var(--u));grid-template-columns:1fr 1fr;column-gap:calc(10 * var(--u));row-gap:calc(10 * var(--u))}
+  .cta{margin-top:calc(16 * var(--u))}
+  .foot{margin-top:calc(12 * var(--u))}
+}
+
+/* ── D · Phone landscape / very short windows ── */
+@media (orientation: landscape) and (max-height: 500px){
+  :root{ --u: clamp(0.6px, min(100vw / 900, 100vh / 400), 1.1px); --tile: 30; --card-h: 54; }
+  @supports (height: 100dvh){ :root{ --u: clamp(0.6px, min(100vw / 900, 100dvh / 400), 1.1px); } }
+  .shell{
+    grid-template-columns:minmax(0,42fr) minmax(0,58fr);
+    grid-template-rows:minmax(0,1fr);
+    padding:calc(10 * var(--u)) 0 calc(10 * var(--u)) calc(10 * var(--u));
+  }
+  .hero{border-radius:0 calc(16 * var(--u)) calc(16 * var(--u)) calc(16 * var(--u))}
+  .hero__img{object-position:60% 18%;transform:none}
+  .hero__glass{--glass-h:220}
+  .quote{padding:0 calc(16 * var(--u)) calc(14 * var(--u))}
+  .quote blockquote{font-size:max(12.5px, calc(15 * var(--u)));line-height:max(17px, calc(21 * var(--u)));letter-spacing:0;--lines:3}
+  .quote__foot{margin-top:calc(10 * var(--u))}
+  .panel{justify-content:center;align-items:center;padding:calc(8 * var(--u)) calc(22 * var(--u))}
+  .panel__inner{width:100%;max-width:calc(560 * var(--u))}
+  .brand{height:max(18px, calc(18 * var(--u)))}
+  .title{margin-top:calc(10 * var(--u));font-size:max(16px, calc(19 * var(--u)));line-height:max(21px, calc(24 * var(--u)))}
+  .lede{margin-top:calc(2 * var(--u))}
+  .tools{margin-top:calc(12 * var(--u));grid-template-columns:1fr 1fr;column-gap:calc(8 * var(--u));row-gap:calc(8 * var(--u))}
+  .cta{margin-top:calc(12 * var(--u));height:max(36px, calc(40 * var(--u)))}
+  .foot{margin-top:calc(8 * var(--u))}
+}
+
+/* small landscape phones: two columns so domains never get cut */
+@media (orientation: landscape) and (max-height: 500px) and (min-width: 1000px){
+  .tools{grid-template-columns:repeat(3, minmax(0,1fr))}
+}
+@media (orientation: landscape) and (max-height: 360px){
+  .lede{display:none}
+  .tools{row-gap:calc(6 * var(--u))}
+}
+
+/* photo card too short for the full quote: trim it gracefully */
+@container hero (max-height: 340px){ .quote blockquote{--lines:2} }
+@container hero (max-height: 250px){ .quote blockquote{display:none} .quote__foot{margin-top:0} }
+@container hero (max-width: 300px){ .quote__nav{display:none} }
+
+/* short, wide desktop windows: never clip */
+@media (min-width: 901px) and (max-height: 640px) and (min-height: 501px){
+  .panel{padding-top:calc(24 * var(--u));padding-bottom:calc(24 * var(--u))}
+}
+@media (prefers-reduced-motion: reduce){
+  *{transition:none!important}
+}
+</style>
+</head>
+<body>
+<main class="shell">
+
+  <!-- ── Photo card ─────────────────────────────────────────────── -->
+  <section class="hero" aria-label="Customer story">
+    <img class="hero__img" src="/assets/customer-story.jpg" alt="" width="1171" height="1343" decoding="async">
+    <div class="hero__glass"></div>
+
+    <div class="hero__pattern" aria-hidden="true">
+      <!-- frosted tiles (50% white + blur) -->
+      <i class="frost" style="--c:2;--r:0"></i>
+      <i class="frost" style="--c:3;--r:1"></i>
+      <i class="frost" style="--c:0;--r:2"></i>
+      <i class="frost" style="--c:2;--r:2"></i>
+      <i class="frost" style="--c:1;--r:3"></i>
+      <i class="frost" style="--c:3;--r:3"></i>
+      <!-- cut-outs: page-coloured cells and the rounded notches along the card edge -->
+      <svg viewBox="0 0 244 244" preserveAspectRatio="none">
+        <g fill="#FFFFFF">
+          <rect x="-1" y="-1" width="62" height="62"/>
+          <path d="M61 61H107A15 15 0 0 1 122 76V107A15 15 0 0 1 107 122H76A15 15 0 0 1 61 107Z"/>
+          <path d="M61 46A15 15 0 0 0 76 61H61Z"/>
+          <path d="M46 61A15 15 0 0 1 61 76V61Z"/>
+          <path d="M46 0H76A15 15 0 0 0 61 15A15 15 0 0 0 46 0Z"/>
+          <path d="M107 0H137A15 15 0 0 0 122 15A15 15 0 0 0 107 0Z"/>
+          <path d="M168 0H198A15 15 0 0 0 183 15A15 15 0 0 0 168 0Z"/>
+          <path d="M0 46V76A15 15 0 0 1 15 61A15 15 0 0 1 0 46Z"/>
+          <path d="M0 107V137A15 15 0 0 1 15 122A15 15 0 0 1 0 107Z"/>
+          <path d="M0 168V198A15 15 0 0 1 15 183A15 15 0 0 1 0 168Z"/>
+        </g>
+      </svg>
+    </div>
+
+    <figure class="quote">
+      <blockquote>I landed multiple paid projects within a couple of days–way more traction than I ever got elsewhere. Definitely my go-to freelance platform now!</blockquote>
+      <div class="quote__foot">
+        <figcaption>
+          <span class="quote__name">Caitlyn Merritt</span>
+          <span class="quote__role">Illustrator, San Francisco CA</span>
+        </figcaption>
+        <div class="quote__nav">
+          <button class="arrow" type="button" aria-label="Previous story">
+            <svg viewBox="0 0 58 58" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M57.25 29A28.25 28.25 0 1 0 29 57.25" stroke-opacity=".5" stroke-width="1.5" stroke-linecap="butt"/>
+              <path d="M39.5 29H18.5M18.5 29L29 18.5M18.5 29L29 39.5" stroke-opacity=".62" stroke-width="2"/>
+            </svg>
+          </button>
+          <button class="arrow" type="button" aria-label="Next story">
+            <svg viewBox="0 0 58 58" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M0.75 29A28.25 28.25 0 1 0 29 0.75" stroke-opacity=".5" stroke-width="1.5" stroke-linecap="butt"/>
+              <path d="M18.5 29H39.5M39.5 29L29 18.5M39.5 29L29 39.5" stroke-opacity=".62" stroke-width="2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </figure>
+  </section>
+
+  <!-- ── Form panel ─────────────────────────────────────────────── -->
+  <section class="panel">
+    <form class="panel__inner" action="#" onsubmit="return false">
+      <a class="brand" href="#" aria-label="Untitled UI home">
+        <svg viewBox="0 0 21 21" aria-hidden="true"><rect x="0" y="0" width="9.5" height="9.5" rx="2.4" fill="#000"/><rect x="11.5" y="11.5" width="9.5" height="9.5" rx="2.4" fill="#000"/><rect x="11.5" y="0" width="9.5" height="9.5" rx="2.4" fill="#000" opacity=".22"/></svg>
+        <span>Untitled UI</span>
+      </a>
+
+      <h1 class="title">What tools do you use?</h1>
+      <p class="lede">We’ll connect you with the best jobs.</p>
+
+      <fieldset class="tools">
+        <legend>Tools you use</legend>
+        <label class="tool"><input type="checkbox" name="tools" value="figma" checked><span class="tool__mark" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M14.17 7.08 8.44 12.92 5.83 10.31" stroke="#fff" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="app" aria-hidden="true"><span class="app__face" style="background:#363536;color:#fff">F</span></span><span class="tool__name">Figma</span><a class="tool__link" href="https://figma.com" target="_blank" rel="noopener">figma.com<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 6V2m0 0h-4m4 0L8 8"/><path d="M6.67 2H5.2C4.08 2 3.52 2 3.09 2.22a2 2 0 0 0-.87.87C2 3.52 2 4.08 2 5.2v5.6c0 1.12 0 1.68.22 2.11a2 2 0 0 0 .87.87c.43.22.99.22 2.11.22h5.6c1.12 0 1.68 0 2.11-.22a2 2 0 0 0 .87-.87c.22-.43.22-.99.22-2.11V9.33"/></svg></a></label>
+        <label class="tool"><input type="checkbox" name="tools" value="framer"><span class="tool__mark" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M14.17 7.08 8.44 12.92 5.83 10.31" stroke="#fff" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="app" aria-hidden="true"><span class="app__face" style="background:#050505;color:#fff">F</span></span><span class="tool__name">Framer</span><a class="tool__link" href="https://framer.com" target="_blank" rel="noopener">framer.com<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 6V2m0 0h-4m4 0L8 8"/><path d="M6.67 2H5.2C4.08 2 3.52 2 3.09 2.22a2 2 0 0 0-.87.87C2 3.52 2 4.08 2 5.2v5.6c0 1.12 0 1.68.22 2.11a2 2 0 0 0 .87.87c.43.22.99.22 2.11.22h5.6c1.12 0 1.68 0 2.11-.22a2 2 0 0 0 .87-.87c.22-.43.22-.99.22-2.11V9.33"/></svg></a></label>
+        <label class="tool"><input type="checkbox" name="tools" value="adobe-xd"><span class="tool__mark" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M14.17 7.08 8.44 12.92 5.83 10.31" stroke="#fff" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="app" aria-hidden="true"><span class="app__face" style="background:linear-gradient(160deg,#FFC23D,#F59A1E);color:#2B0F35">AX</span></span><span class="tool__name">Adobe XD</span><a class="tool__link" href="https://adobe.com" target="_blank" rel="noopener">adobe.com<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 6V2m0 0h-4m4 0L8 8"/><path d="M6.67 2H5.2C4.08 2 3.52 2 3.09 2.22a2 2 0 0 0-.87.87C2 3.52 2 4.08 2 5.2v5.6c0 1.12 0 1.68.22 2.11a2 2 0 0 0 .87.87c.43.22.99.22 2.11.22h5.6c1.12 0 1.68 0 2.11-.22a2 2 0 0 0 .87-.87c.22-.43.22-.99.22-2.11V9.33"/></svg></a></label>
+        <label class="tool"><input type="checkbox" name="tools" value="webflow" checked><span class="tool__mark" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M14.17 7.08 8.44 12.92 5.83 10.31" stroke="#fff" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="app" aria-hidden="true"><span class="app__face" style="background:#4353FF;color:#fff">W</span></span><span class="tool__name">Webflow</span><a class="tool__link" href="https://webflow.com" target="_blank" rel="noopener">webflow.com<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 6V2m0 0h-4m4 0L8 8"/><path d="M6.67 2H5.2C4.08 2 3.52 2 3.09 2.22a2 2 0 0 0-.87.87C2 3.52 2 4.08 2 5.2v5.6c0 1.12 0 1.68.22 2.11a2 2 0 0 0 .87.87c.43.22.99.22 2.11.22h5.6c1.12 0 1.68 0 2.11-.22a2 2 0 0 0 .87-.87c.22-.43.22-.99.22-2.11V9.33"/></svg></a></label>
+        <label class="tool"><input type="checkbox" name="tools" value="relume" checked><span class="tool__mark" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M14.17 7.08 8.44 12.92 5.83 10.31" stroke="#fff" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="app" aria-hidden="true"><span class="app__face" style="background:#EBEBEB;color:#111">R</span></span><span class="tool__name">Relume</span><a class="tool__link" href="https://relume.io" target="_blank" rel="noopener">relume.io<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 6V2m0 0h-4m4 0L8 8"/><path d="M6.67 2H5.2C4.08 2 3.52 2 3.09 2.22a2 2 0 0 0-.87.87C2 3.52 2 4.08 2 5.2v5.6c0 1.12 0 1.68.22 2.11a2 2 0 0 0 .87.87c.43.22.99.22 2.11.22h5.6c1.12 0 1.68 0 2.11-.22a2 2 0 0 0 .87-.87c.22-.43.22-.99.22-2.11V9.33"/></svg></a></label>
+        <label class="tool"><input type="checkbox" name="tools" value="canva"><span class="tool__mark" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M14.17 7.08 8.44 12.92 5.83 10.31" stroke="#fff" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="app" aria-hidden="true"><span class="app__face" style="background:linear-gradient(135deg,#00C4CC,#6E3AF0);color:#fff">C</span></span><span class="tool__name">Canva</span><a class="tool__link" href="https://canva.com" target="_blank" rel="noopener">canva.com<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 6V2m0 0h-4m4 0L8 8"/><path d="M6.67 2H5.2C4.08 2 3.52 2 3.09 2.22a2 2 0 0 0-.87.87C2 3.52 2 4.08 2 5.2v5.6c0 1.12 0 1.68.22 2.11a2 2 0 0 0 .87.87c.43.22.99.22 2.11.22h5.6c1.12 0 1.68 0 2.11-.22a2 2 0 0 0 .87-.87c.22-.43.22-.99.22-2.11V9.33"/></svg></a></label>
+      </fieldset>
+
+      <button class="cta" type="submit">Create account</button>
+      <p class="foot">Already have an account? <a href="#">Log in</a></p>
+    </form>
+  </section>
+</main>
+</body>
+</html>
