@@ -4,6 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Create account</title>
+<script>
+/* Set the entrance state before the page paints; recover the static page if startup fails. */
+if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  document.documentElement.classList.add('entrance-pending');
+  window.entranceFallback = window.setTimeout(() => {
+    document.documentElement.classList.remove('entrance-pending');
+  }, 4500);
+}
+</script>
 <style>
 /* ── Inter, embedded (latin subset) so the page renders identically offline ── */
 @font-face{font-family:"Inter";font-style:normal;font-weight:400;font-display:block;src:url(/assets/inter-400.woff2) format("woff2")}
@@ -469,6 +478,17 @@ button{font:inherit;color:inherit}
 @media (min-width: 901px) and (max-height: 640px) and (min-height: 501px){
   .panel{padding-top:calc(24 * var(--u));padding-bottom:calc(24 * var(--u))}
 }
+/* Initial states occupy their final layout space. The photo and its pattern never move. */
+html.entrance-pending .quote blockquote,
+html.entrance-pending .quote__foot,
+html.entrance-pending .brand,
+html.entrance-pending .title,
+html.entrance-pending .lede,
+html.entrance-pending .tool,
+html.entrance-pending .cta,
+html.entrance-pending .foot{opacity:0}
+html.entrance-pending .quote blockquote,
+html.entrance-pending .title{clip-path:inset(0 0 100% 0)}
 @media (prefers-reduced-motion: reduce){
   *{transition:none!important}
 }
@@ -558,5 +578,59 @@ button{font:inherit;color:inherit}
     </form>
   </section>
 </main>
+<script>
+(() => {
+  const root = document.documentElement;
+  if (!root.classList.contains('entrance-pending')) return;
+
+  const finish = () => {
+    root.classList.remove('entrance-pending');
+    window.clearTimeout(window.entranceFallback);
+    animations.forEach(animation => animation.cancel());
+  };
+  const animations = [];
+  if (!Element.prototype.animate || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    finish();
+    return;
+  }
+
+  const ease = 'cubic-bezier(0.22, 1, 0.36, 1)';
+  const soft = (distance) => [
+    { opacity: 0, transform: `translate3d(0, ${distance}px, 0)` },
+    { opacity: 1, transform: 'none' }
+  ];
+  const masked = (distance) => [
+    { opacity: 0, transform: `translate3d(0, ${distance}px, 0)`, clipPath: 'inset(0 0 100% 0)' },
+    { opacity: 1, transform: 'none', clipPath: 'inset(0 0 0 0)' }
+  ];
+  const add = (element, frames, at, duration) => {
+    animations.push(element.animate(frames, { delay: at, duration, easing: ease, fill: 'both' }));
+  };
+
+  const start = () => {
+    if (!root.classList.contains('entrance-pending')) return;
+    const stacked = window.matchMedia('(max-width: 900px), (orientation: portrait) and (max-width: 1180px)').matches;
+    const panelOffset = stacked ? 120 : 0;
+
+    add(document.querySelector('.quote blockquote'), masked(12), 150, 850);
+    add(document.querySelector('.quote__foot'), soft(7), 660, 520);
+    add(document.querySelector('.brand'), soft(5), 100 + panelOffset, 480);
+    add(document.querySelector('.title'), masked(10), 350 + panelOffset, 760);
+    add(document.querySelector('.lede'), soft(6), 690 + panelOffset, 460);
+
+    document.querySelectorAll('.tool').forEach((card, index) => {
+      const row = Math.floor(index / 2);
+      const column = index % 2;
+      add(card, soft(8), 880 + panelOffset + row * 155 + column * 55, 510);
+    });
+    add(document.querySelector('.cta'), soft(7), 1350 + panelOffset, 500);
+    add(document.querySelector('.foot'), soft(4), 1530 + panelOffset, 430);
+
+    Promise.all(animations.map(animation => animation.finished)).then(finish, finish);
+  };
+
+  document.fonts.ready.then(start, start);
+})();
+</script>
 </body>
 </html>
